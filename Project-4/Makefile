@@ -1,28 +1,29 @@
-#! /usr/bin/make
+#! make
 
+CUDAFILES = $(wildcard *.cu)
+CPPFILES = $(wildcard *.cpp)
+HEADERS = $(wildcard *.h)
+
+STD = -std=c++17
 OPT ?= -O2
-STD ?= -std=c++20
-
-SOURCES = $(wildcard *.cpp)
-TARGETS = $(SOURCES:.cpp=.out)
-
 CXXFLAGS = $(OPT) $(STD)
 
-# Select files that should be removed when we need to "clean" a project
-DIRT = $(wildcard *.o *.out *.dSYM)
+NVCC = nvcc
+DIRT = $(wildcard *.i *.ppm *.cpu *.gpu)
 
-#----------------------------------------------------------------------------
+default all: cpu gpu
 
-default: targets
+cpu: $(CPPFILES:.cpp=.cpu)
 
-targets : $(TARGETS)
-
-%.out : %.cpp
+%.cpu : %.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-#----------------------------------------------------------------------------
+gpu: $(CUDAFILES:.cu=.gpu)
+
+%.gpu : %.cu $(HEADERS)
+	$(NVCC) $(CXXFLAGS) $< -o $@
 
 clean:
 	$(RM) $(DIRT)
 
-.PHONY: default targets clean 
+.PHONY: default all cpu gpu clean
